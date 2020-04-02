@@ -8,11 +8,10 @@ fetch("/api/workouts/range")
     populateChart(data);
   });
 
+API.getWorkoutsInRange();
 
-API.getWorkoutsInRange()
-
-  function generatePalette() {
-    const arr = [
+function generatePalette() {
+  const arr = [
     "#003f5c",
     "#2f4b7c",
     "#665191",
@@ -29,10 +28,10 @@ API.getWorkoutsInRange()
     "#f95d6a",
     "#ff7c43",
     "ffa600"
-  ]
+  ];
 
   return arr;
-  }
+}
 function populateChart(data) {
   let durations = duration(data);
   let pounds = calculateTotalWeight(data);
@@ -43,19 +42,42 @@ function populateChart(data) {
   let bar = document.querySelector("#canvas2").getContext("2d");
   let pie = document.querySelector("#canvas3").getContext("2d");
   let pie2 = document.querySelector("#canvas4").getContext("2d");
+  console.log(data);
+  const workoutDays = data.map(({ day }) => {
+    const parsedDate = new Date(day);
+    const dayOfWeek = parsedDate.getDay();
+    console.log(dayOfWeek);
+    switch (dayOfWeek) {
+      case 0:
+      case "0":
+        return "Sunday";
+      case 1:
+      case "1":
+        return "Monday";
+      case 2:
+      case "2":
+        return "Tuesday";
+      case 3:
+      case "3":
+        return "Wednesday";
+      case 4:
+      case "4":
+        return "Thursday";
+      case 5:
+      case "5":
+        return "Friday";
+      case 6:
+      case "6":
+        return "Saturday";
+      default:
+        return "Invalid Date";
+    }
+  });
 
   let lineChart = new Chart(line, {
     type: "line",
     data: {
-      labels: [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-      ],
+      labels: workoutDays,
       datasets: [
         {
           label: "Workout Duration In Minutes",
@@ -85,6 +107,9 @@ function populateChart(data) {
             display: true,
             scaleLabel: {
               display: true
+            },
+            ticks: {
+              beginAtZero: true
             }
           }
         ]
@@ -95,15 +120,7 @@ function populateChart(data) {
   let barChart = new Chart(bar, {
     type: "bar",
     data: {
-      labels: [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ],
+      labels: workoutDays,
       datasets: [
         {
           label: "Pounds",
@@ -190,23 +207,28 @@ function duration(data) {
   let durations = [];
 
   data.forEach(workout => {
-    workout.exercises.forEach(exercise => {
-      durations.push(exercise.duration);
-    });
+    durations.push(
+      workout.exercises.reduce((total, { duration }) => total + duration, 0)
+    );
   });
-
+  console.log(durations);
   return durations;
 }
 
 function calculateTotalWeight(data) {
   let total = [];
-
+  console.log(data);
   data.forEach(workout => {
-    workout.exercises.forEach(exercise => {
-      total.push(exercise.weight);
-    });
+    if (workout.weight) {
+      total.push(
+        workout.exercises.reduce(
+          (totalCount, { weight }) => totalCount + weight,
+          0
+        )
+      );
+    }
   });
-
+  console.log(total);
   return total;
 }
 
@@ -218,6 +240,6 @@ function workoutNames(data) {
       workouts.push(exercise.name);
     });
   });
-  
+
   return workouts;
 }
